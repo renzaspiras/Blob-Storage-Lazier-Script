@@ -1,0 +1,1 @@
+# Blob-Storage-Lazier-Script
