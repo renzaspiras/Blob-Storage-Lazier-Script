@@ -470,4 +470,32 @@ public class BloberDriver
             throw new FileNotFoundException($"Blob '{fileName}' not found in container '{containerName}'.");
         }
     }
+
+    public async Task<string> UploadPdfAsync(string containerName, string filePath, string connString)
+    {
+        try
+        {
+            var blobServiceClient = new BlobServiceClient(connString);
+            var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+            // Ensure the container exists
+            await containerClient.CreateIfNotExistsAsync();
+
+            var fileName = Path.GetFileName(filePath);
+            var blobClient = containerClient.GetBlobClient(fileName);
+
+            // Upload the PDF file to the blob
+            using (var fileStream = File.OpenRead(filePath))
+            {
+                await blobClient.UploadAsync(fileStream, overwrite: true);
+            }
+
+            return $"PDF file '{fileName}' uploaded successfully to container '{containerName}'.";
+        }
+        catch (Exception ex)
+        {
+            return $"Error uploading PDF: {ex.Message}";
+        }
+    }
+
 }

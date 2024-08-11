@@ -123,4 +123,51 @@ public class Blober
         return await bloberDriver.GetFileContentAsync(containerName, fileName, ConnectionString);
     }
 
+    /*
+    public async Task<string> UploadPdfAsync(string containerName, string filePath)
+    {
+        return await bloberDriver.UploadPdfAsync(containerName, filePath, ConnectionString);
+    }
+     */
+
+    public async Task<string> UploadPdfAsync(string containerName, Stream fileStream, string fileName)
+    {
+        if (fileStream == null || fileStream.Length == 0)
+        {
+            throw new ArgumentException("The file stream is empty.");
+        }
+
+        var blobServiceClient = new BlobServiceClient(ConnectionString);
+        var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+
+        // Ensure the container exists
+        await containerClient.CreateIfNotExistsAsync();
+
+        // Get the blob client
+        var blobClient = containerClient.GetBlobClient(fileName);
+
+        // Upload the file
+        await blobClient.UploadAsync(fileStream, overwrite: true);
+
+        return $"PDF file '{fileName}' uploaded successfully to container '{containerName}'.";
+    }
+
+    public async Task<Stream> DownloadFileAsync(string containerName, string fileName)
+    {
+        var blobServiceClient = new BlobServiceClient(ConnectionString);
+        var containerClient = blobServiceClient.GetBlobContainerClient(containerName);
+        var blobClient = containerClient.GetBlobClient(fileName);
+
+        if (await blobClient.ExistsAsync())
+        {
+            var downloadInfo = await blobClient.DownloadAsync();
+            return downloadInfo.Value.Content;
+        }
+        else
+        {
+            throw new FileNotFoundException($"Blob '{fileName}' not found in container '{containerName}'.");
+        }
+    }
+
+
 }
